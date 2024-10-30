@@ -768,6 +768,7 @@
                     function removeSong(index) {
                         songs.splice(index, 1); // 從數組中刪除歌曲
                         renderSongList(); // 更新歌曲列表
+                        refreshSongSelect()
                     }
                     refreshSongSelect()
 
