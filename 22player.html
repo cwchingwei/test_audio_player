@@ -230,16 +230,68 @@
         #song-list {
             list-style: none;
             padding: 0;
+            display: grid;
+            grid-template-rows: repeat(6, auto);
+            /* 每列7首歌 */
+            gap: 5px;
+            /* 歌曲之間的間距 */
+            grid-auto-flow: column;
+            /* 先填滿列，再換下一行 */
+            text-align: left;
+            /* 文字靠左對齊 */
+        }
+
+        #song-list li {
+            direction: ltr;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            gap: 2px;
+        }
+
+
+        .song-list-container {
+            max-height: 200px;
+            /* 設置最大高度 */
+            overflow-y: auto;
+            /* 超過高度時顯示捲軸 */
+            border: 1px solid #94d4ff;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #f0f8ff;
         }
 
         .song-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin: 5px 0;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            /* 垂直對齊 */
+            margin: 1px 0;
+            /* 減小上下邊距 */
+            padding: 3px;
+            border: none;
+            /* 如果不需要邊框，可以去掉 */
+            font-size: 10px;
+            /* 調整字體大小 */
+            line-height: 0.8;
+            /* 減小行高以縮短行距 */
+        }
+
+        .delete-btn {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            /* 完全圓形 */
+            font-size: 10px;
+            /* 字體大小 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-left: 5px;
+            padding: 0;
         }
 
         #modal {
@@ -252,21 +304,33 @@
         }
 
         #modal-content {
+            width: 400px;
+            /* 縮小彈出視窗寬度 */
             background-color: #fff;
-            padding: 20px;
+            padding: 10px;
             border-radius: 5px;
-            width: 300px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
 
         .close-btn {
+            width: 20px;
+            /* 按鈕寬度 */
+            height: 20px;
+            /* 按鈕高度 */
+            border-radius: 50%;
+            /* 完全圓形 */
+            font-size: 10px;
+            /* 字體大小 */
+            color: white;
+            background-color: #94d4ff;
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
             border: none;
             cursor: pointer;
-            font-size: 16px;
+            padding: 0;
+
         }
 
         #file-input {
@@ -282,13 +346,6 @@
         <h1>音樂播放器</h1>
         <audio id="audio"></audio>
         <select id="song-select">
-            <option value="">選擇歌曲</option>
-            <option value="music/airball.mp3">airball</option>
-            <option value="music/elysees.mp3">elysees</option>
-            <option value="music/nothing.mp3">nothing</option>
-            <option value="music/rain.mp3">rain</option>
-            <option value="music/travel.mp3">travel</option>
-            <option value="music/moon.mp3">moon</option>
         </select>
         <div class="progress-control" style="display: flex;white-space: nowrap;">
             <label for="progress"></label>
@@ -314,12 +371,10 @@
 
             </div>
             <div id="current-song-display"
-                style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap;">
+                style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap; width: 100%;">
                 <h2 style="font-family: 'Arial', sans-serif; color: #007bff; font-size: 1em; margin: 0;">
                     目前播放: <span id="current-song-title">無</span>
                 </h2>
-
-                <div style="min-width: 165px;"></div> <!-- 空的 div 以推動音量控制部分到右側 -->
 
                 <div class="volume-control" style="display: flex; align-items: center; white-space: nowrap;">
                     <label for="volume" style="margin-right: 5px;">音量:</label>
@@ -341,15 +396,16 @@
                         <span id="volume-display" style="white-space: nowrap;">100</span>%
                     </span>
                 </div>
-                <button id="system-btn"><i class="fa fa-wrench" aria-hidden="true"></i> 管理歌單</button>
+
                 <!-- Modal -->
 
                 <div id="modal">
                     <div id="modal-content">
                         <button class="close-btn" id="close-modal-btn"><i class="fa fa-times"
                                 aria-hidden="true"></i></button>
-                        <h2>歌單管理</h2>
-                        <ul id="song-list"></ul>
+                        <div class="song-list-container">
+                            <ul id="song-list"></ul>
+                        </div>
                         <input type="file" id="file-input" accept="audio/*" multiple>
                         <button id="add-song-btn">新增</button>
                     </div>
@@ -380,6 +436,7 @@
                     const song = []; // 用來儲存歌曲的數組
                     const songList = document.getElementById('song-list');
                     const modal = document.getElementById('modal');
+                    const songDisplayName = song.name || song; // 確保顯示正確的名稱
 
 
 
@@ -404,7 +461,7 @@
                     let currentSongIndex = 0;
 
                     function updateCurrentSongDisplay() {
-                        const songName = songSelect.value.split('/').pop(); // 獲取文件名
+                        const songName = songSelect.options[songSelect.selectedIndex].text.split('/').pop(); // 獲取文件名
                         currentSongTitle.textContent = songName; // 更新顯示的歌曲名稱
                     }
                     function updateAudioDuration() {
@@ -418,8 +475,8 @@
                     // 當歌曲選擇改變時更新當前歌曲索引
                     songSelect.addEventListener('change', function () {
                         const selectedSong = songSelect.value;
-
-                        if (selectedSong.endsWith(".mp3")) {
+                        if (selectedSong.endsWith(".mp3") || selectedSong.startsWith("blob:")) {
+                            console.log("play");
                             audio.src = selectedSong; // 更新音頻來源
                             audio.currentTime = 0; // 重置播放時間
                             progressControl.value = 0; // 重置進度條
@@ -433,9 +490,6 @@
                                 durationDisplay.textContent = formatTime(audio.duration);
                                 audio.play();
                             }, { once: true });
-
-
-
                         } else {
                             // 如果沒有選擇歌曲，禁用音頻控制
                             audio.pause();
@@ -650,22 +704,30 @@
 
                     // 渲染歌曲列表
                     function renderSongList() {
+                       
                         songList.innerHTML = ''; // 清空列表
-                        songs.forEach((song, index) => {
-                            // 使用 song.name，如果沒有則顯示檔案名稱或替代文字
+                        songs.forEach((song, index) => {// 使用 song.name，如果沒有則顯示檔案名稱或替代文字
                             const songDisplayName = song.name || song;
+                            const songName = songDisplayName.split('/').pop(); // 獲取文件名
                             const listItem = document.createElement('li');
                             listItem.className = 'song-item';
-                            listItem.innerHTML = `
-                    ${songDisplayName}
-                    <button onclick="removeSong(${index})">刪除</button>
-                `;
-                            songList.appendChild(listItem);
+
+                            // 創建刪除按鈕
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'delete-btn';
+                            deleteBtn.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>'; // 使用 Font Awesome 的 X 圖標
+                            deleteBtn.onclick = () => removeSong(index); // 設定按鈕的點擊事件
+
+                            // 將刪除按鈕和歌曲名稱添加到列表項中
+                            listItem.appendChild(deleteBtn); // 添加刪除按鈕
+                            listItem.appendChild(document.createTextNode(songName)); // 顯示檔案名稱
+
+                            songList.appendChild(listItem); // 添加列表項到歌單中
                         });
                     }
 
-                    // 新增歌曲
-                    document.getElementById('add-song-btn').onclick = function () {
+                   // 新增歌曲
+                   document.getElementById('add-song-btn').onclick = function () {
                         document.getElementById('file-input').click();
                     };
 
@@ -675,14 +737,39 @@
                             songs.push(files[i]); // 將檔案加入歌曲數組
                         }
                         renderSongList(); // 更新歌曲列表
+                        refreshSongSelect();
                     };
 
+                    function refreshSongSelect() {
+                        // 清空現有選項
+                        songSelect.innerHTML = ''; 
+
+                        // 添加 "選擇歌曲" 的預設選項
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = '';
+                        defaultOption.textContent = '選擇歌曲';
+                        songSelect.appendChild(defaultOption);
+
+                        // 根據 songs 陣列添加新選項
+                        songs.forEach(song => {
+                            const option = document.createElement('option');
+                            if (typeof song === 'object' && song instanceof File) {
+                                option.value = URL.createObjectURL(song)
+                            } else {
+                                option.value = song
+                            }
+                            const songDisplayName = song.name || song;
+                            const songName = songDisplayName.split('/').pop(); // 獲取文件名
+                            option.textContent = songName; // 設定歌曲名稱，若無名稱則顯示 "未知歌曲"
+                            songSelect.appendChild(option);
+                        });
+                    }
                     // 刪除歌曲
                     function removeSong(index) {
                         songs.splice(index, 1); // 從數組中刪除歌曲
                         renderSongList(); // 更新歌曲列表
                     }
-
+                    refreshSongSelect()
 
                 </script>
 
