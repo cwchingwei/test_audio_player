@@ -226,6 +226,56 @@
             color: #333;
             background-color: #f0f8ff;
         }
+
+        #song-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .song-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        #modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #file-input {
+            display: none;
+            /* 隱藏文件輸入 */
+        }
     </style>
 </head>
 
@@ -294,284 +344,350 @@
                         <span id="volume-display" style="white-space: nowrap;">100</span>%
                     </span>
                 </div>
+                <button id="system-btn"><i class="fa fa-wrench" aria-hidden="true"></i> 管理歌單</button>
+                <!-- Modal -->
 
-                <p id="volume-status" style="margin-top: 0; padding-top: 0;"></p> <!-- 清除上方間距以移動位置 -->
-            </div>
-        </div>
-    </div>
-    <script>
+                <div id="modal">
+                    <div id="modal-content">
+                        <button class="close-btn" id="close-modal-btn"><i class="fa fa-times"
+                                aria-hidden="true"></i></button>
+                        <h2>歌單管理</h2>
+                        <ul id="song-list"></ul>
+                        <input type="file" id="file-input" accept="audio/*" multiple>
+                        <button id="add-song-btn">新增</button>
+                    </div>
+                </div>
 
-        const audio = document.getElementById('audio');
-        const songSelect = document.getElementById('song-select');
-        const playBtn = document.getElementById('play-btn');
-        const pauseBtn = document.getElementById('pause-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const prevBtn = document.getElementById('prev-btn');
-        const rewindBtn = document.getElementById('rewind-btn');
-        const fastForwardBtn = document.getElementById('fast-forward-btn');
-        const singlePlayBtn = document.getElementById('single-play-btn');
-        const playlistPlayBtn = document.getElementById('playlist-play-btn');
-        const randomPlayBtn = document.getElementById('random-play-btn');
-        const muteBtn = document.getElementById('mute-btn');
-        const currentSongTitle = document.getElementById('current-song-title');
-        const volumeInput = document.getElementById("volume");
-        const volumeDisplay = document.getElementById("volume-display");
-        const progressControl = document.getElementById('progress');
-        const currentTimeDisplay = document.getElementById('current-time');
-        const durationDisplay = document.getElementById('duration');
+                <script>
 
-
-        let isMuted = false;
-
-        muteBtn.addEventListener('click', () => {
-            isMuted = !isMuted;
-            audio.muted = isMuted; // 設定音頻的靜音狀態
-            muteBtn.innerHTML = isMuted ? '<i class="fa fa-volume-off" aria-hidden="true"></i>' : '<i class="fa fa-volume-down" aria-hidden="true"></i>';
-        });
-
-
-
-        let songs = [
-            'music/airball.mp3',
-            'music/elysees.mp3',
-            'music/nothing.mp3',
-            'music/rain.mp3',
-            'music/travel.mp3',
-            'music/moon.mp3'
-        ];
-        let currentSongIndex = 0;
-
-        function updateCurrentSongDisplay() {
-            const songName = songSelect.value.split('/').pop(); // 獲取文件名
-            currentSongTitle.textContent = songName; // 更新顯示的歌曲名稱
-        }
-        function updateAudioDuration() {
-            if (audio.src.endsWith(".mp3")) {
-                durationDisplay.textContent = formatTime(audio.duration);
-            }
-        }
-
-     
-
-        // 當歌曲選擇改變時更新當前歌曲索引
-        songSelect.addEventListener('change', function () {
-            const selectedSong = songSelect.value;
-
-            if (selectedSong.endsWith(".mp3")) {
-                audio.src = selectedSong; // 更新音頻來源
-                audio.currentTime = 0; // 重置播放時間
-                progressControl.value = 0; // 重置進度條
-                currentTimeDisplay.textContent = '0:00'; // 重置當前時間顯示
-                durationDisplay.textContent = '0:00'; // 重置總時長顯示
-                audio.load(); // 加載新歌曲
-                
-
-                updateCurrentSongDisplay();
-                audio.addEventListener('loadedmetadata', function () {
-                    durationDisplay.textContent = formatTime(audio.duration);
-                    audio.play();
-                }, { once: true });
-
-             
-
-            } else {
-                // 如果沒有選擇歌曲，禁用音頻控制
-                audio.pause();
-                audio.src = ''//這一段是返回選擇歌曲時,時長和進度條歸零
-                audio.disabled = true;
-                progressControl.disabled = true;
-                progressControl.value = 0; // 重置進度條
-                currentTimeDisplay.textContent = '0:00'; // 重置當前時間顯示
-                durationDisplay.textContent = '0:00'; // 重置總時長顯示
-                currentSongTitle.textContent = '無'; // 重置當前歌曲顯示
-              
-            }
-        });
+                    const audio = document.getElementById('audio');
+                    const songSelect = document.getElementById('song-select');
+                    const playBtn = document.getElementById('play-btn');
+                    const pauseBtn = document.getElementById('pause-btn');
+                    const stopBtn = document.getElementById('stop-btn');
+                    const nextBtn = document.getElementById('next-btn');
+                    const prevBtn = document.getElementById('prev-btn');
+                    const rewindBtn = document.getElementById('rewind-btn');
+                    const fastForwardBtn = document.getElementById('fast-forward-btn');
+                    const singlePlayBtn = document.getElementById('single-play-btn');
+                    const playlistPlayBtn = document.getElementById('playlist-play-btn');
+                    const randomPlayBtn = document.getElementById('random-play-btn');
+                    const muteBtn = document.getElementById('mute-btn');
+                    const currentSongTitle = document.getElementById('current-song-title');
+                    const volumeInput = document.getElementById("volume");
+                    const volumeDisplay = document.getElementById("volume-display");
+                    const progressControl = document.getElementById('progress');
+                    const currentTimeDisplay = document.getElementById('current-time');
+                    const durationDisplay = document.getElementById('duration');
+                    const systemBtn = document.getElementById('system-btn');
+                    const song = []; // 用來儲存歌曲的數組
+                    const songList = document.getElementById('song-list');
+                    const modal = document.getElementById('modal');
 
 
 
-        // 更新進度條和顯示的時間
-        audio.addEventListener('loadedmetadata', function () {
-            // 更新總時長顯示
-            durationDisplay.textContent = formatTime(audio.duration);
-        });
+                    let isMuted = false;
 
-        audio.addEventListener('timeupdate', function () {
-            if (audio.duration && audio.src.endsWith(".mp3")) { // 確保有音頻可播放
-                const progress = (audio.currentTime / audio.duration) * 100;
-                progressControl.value = progress; // 更新滑動條的值
-                currentTimeDisplay.textContent = formatTime(audio.currentTime); // 更新當前播放時間顯示
-            }
-        });
-
-        // 允許用戶調整播放進度
-        let isDragging = false; // 用於追蹤滑動條是否正在拖動
-
-        progressControl.addEventListener('mousedown', () => {
-            isDragging = true; // 開始拖動時設為 true
-        });
-
-        progressControl.addEventListener('mouseup', () => {
-            isDragging = false; // 結束拖動時設為 false
-            if (audio.duration) {
-                const newTime = (progressControl.value / 100) * audio.duration;
-                audio.currentTime = newTime; // 設置新的播放時間
-            }
-        });
-
-        // 當滑動條變動時，設定音頻播放時間
-        progressControl.addEventListener('input', function () {
-            if (isDragging && audio.duration) {
-                const newTime = (progressControl.value / 100) * audio.duration;
-                currentTimeDisplay.textContent = formatTime(newTime); // 預覽時間
-            }
-        });
-
-        function updateProgress() {
-            if (!isDragging && audio.duration) {
-                const progress = (audio.currentTime / audio.duration) * 100;
-                progressControl.value = progress;
-                currentTimeDisplay.textContent = formatTime(audio.currentTime);
-            }
-        }
-
-        // 格式化時間顯示
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-        audio.addEventListener('loadedmetadata', function () {
-            durationDisplay.textContent = formatTime(audio.duration);
-        });
-
-        
-
-        playBtn.addEventListener('click', playSong);
-        pauseBtn.addEventListener('click', pauseSong);
-        stopBtn.addEventListener('click', stopSong);
-        nextBtn.addEventListener('click', nextSong);
-        prevBtn.addEventListener('click', prevSong);
-        rewindBtn.addEventListener('click', rewindSong);
-        fastForwardBtn.addEventListener('click', fastForwardSong);
-        singlePlayBtn.addEventListener('click', playSingleSong);
-        playlistPlayBtn.addEventListener('click', playPlaylist);
-        randomPlayBtn.addEventListener('click', playRandomSong);
+                    muteBtn.addEventListener('click', () => {
+                        isMuted = !isMuted;
+                        audio.muted = isMuted; // 設定音頻的靜音狀態
+                        muteBtn.innerHTML = isMuted ? '<i class="fa fa-volume-off" aria-hidden="true"></i>' : '<i class="fa fa-volume-down" aria-hidden="true"></i>';
+                    });
 
 
-        function playSong() {
-            if (audio.src) {
-                audio.play().catch(error => {
-                    console.error("Error playing audio:", error);
-                });
-                updateAudioDuration()
-            }
-        }
 
-        function pauseSong() {
-            audio.pause();
-            playBtn.disabled = false; // 禁用播放按鈕
-        }
+                    let songs = [
+                        'music/airball.mp3',
+                        'music/elysees.mp3',
+                        'music/nothing.mp3',
+                        'music/rain.mp3',
+                        'music/travel.mp3',
+                        'music/moon.mp3'
+                    ];
+                    let currentSongIndex = 0;
 
-
-        function stopSong() {
-            audio.pause();
-            audio.currentTime = 0;
-            playBtn.disabled = false; // 禁用播放按鈕
-        }
-        function nextSong() {
-            currentSongIndex = (currentSongIndex + 1) % songs.length; // 確保在範圍內
-            console.log("Current song index (next):", currentSongIndex); // 調試用
-            const nextSong = songs[currentSongIndex];
-            songSelect.value = nextSong;
-            songSelect.dispatchEvent(new Event('change'));
-            updateCurrentSongDisplay(); // 更新顯示的歌曲名稱
-        }
-
-        function prevSong() {
-            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length; // 確保在範圍內
-            console.log("Current song index (prev):", currentSongIndex); // 調試用
-            const nextSong = songs[currentSongIndex];
-            songSelect.value = nextSong;
-            songSelect.dispatchEvent(new Event('change'));
-            updateCurrentSongDisplay(); // 更新顯示的歌曲名稱
-        }
-
-        function rewindSong() {
-            audio.currentTime = Math.max(0, audio.currentTime - 10);
-        }
-
-        function fastForwardSong() {
-            audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
-        }
-
-        function playSingleSong() {
-            audio.loop = true; // 設置為循環當前歌曲
-            audio.play();
-        }
-
-        function playPlaylist() {
-            audio.loop = false; // 設置為播放列表
-            audio.src = songs[currentSongIndex];
-            playSong();
-            audio.removeEventListener('ended', nextSong); // 移除之前的監聽器
-            audio.addEventListener('ended', function () {
-                nextSong(); // 當歌曲播放結束，播放下一首
-                updateCurrentSongDisplay(); // 更新當前歌曲顯示
-            });
-        }
+                    function updateCurrentSongDisplay() {
+                        const songName = songSelect.value.split('/').pop(); // 獲取文件名
+                        currentSongTitle.textContent = songName; // 更新顯示的歌曲名稱
+                    }
+                    function updateAudioDuration() {
+                        if (audio.src.endsWith(".mp3")) {
+                            durationDisplay.textContent = formatTime(audio.duration);
+                        }
+                    }
 
 
-        function playRandomSong() {
-            const randomIndex = Math.floor(Math.random() * songs.length); // 隨機獲取歌曲索引
-            const selectedSong = songs[randomIndex]; // 獲取隨機選擇的歌曲
-            audio.src = selectedSong; // 更新音頻來源
-            audio.currentTime = 0; // 重置播放時間
-            audio.play(); // 播放隨機歌曲
-            updateCurrentSongDisplay(); // 更新顯示歌曲名稱
-            playBtn.disabled = true; // 禁用播放按鈕
-            pauseBtn.disabled = false; // 啟用暫停按鈕
-            updateCurrentSongDisplay(); // 更新顯示的歌曲名稱
-        }
 
-        const volumeControl = document.getElementById('volume');
+                    // 當歌曲選擇改變時更新當前歌曲索引
+                    songSelect.addEventListener('change', function () {
+                        const selectedSong = songSelect.value;
 
-        // 設置音量
-        volumeInput.addEventListener('input', function () {
-            audio.volume = volumeInput.value; // 設置音量
-            updateVolumeDisplay(); // 更新音量顯示
-        });
-
-        function updateVolumeDisplay() {
-            const volumePercentage = Math.round(volumeInput.value * 100); // 將音量轉換為百分比並四捨五入
-            volumeDisplay.textContent = volumePercentage; // 更新顯示的音量數字
-        }
-
-        function increaseVolume() {
-            if (audio.volume < 1) {
-                audio.volume = Math.min(1, audio.volume + 0.1);
-                volumeInput.value = audio.volume; // 更新滑動條的值
-                updateVolumeDisplay(); // 更新顯示的數字
-            }
-        }
-
-        function decreaseVolume() {
-            if (audio.volume > 0) {
-                audio.volume = Math.max(0, audio.volume - 0.1);
-                volumeInput.value = audio.volume; // 更新滑動條的值
-                updateVolumeDisplay(); // 更新顯示的數字
-            }
-        }
-
-        // 初始化顯示音量
-        updateVolumeDisplay();
-        audio.addEventListener('play', updateCurrentSongDisplay);
-        // 添加 timeupdate 事件來更新進度條
-        audio.addEventListener('timeupdate', updateProgress);
+                        if (selectedSong.endsWith(".mp3")) {
+                            audio.src = selectedSong; // 更新音頻來源
+                            audio.currentTime = 0; // 重置播放時間
+                            progressControl.value = 0; // 重置進度條
+                            currentTimeDisplay.textContent = '0:00'; // 重置當前時間顯示
+                            durationDisplay.textContent = '0:00'; // 重置總時長顯示
+                            audio.load(); // 加載新歌曲
 
 
-    </script>
+                            updateCurrentSongDisplay();
+                            audio.addEventListener('loadedmetadata', function () {
+                                durationDisplay.textContent = formatTime(audio.duration);
+                                audio.play();
+                            }, { once: true });
+
+
+
+                        } else {
+                            // 如果沒有選擇歌曲，禁用音頻控制
+                            audio.pause();
+                            audio.src = ''//這一段是返回選擇歌曲時,時長和進度條歸零
+                            audio.disabled = true;
+                            progressControl.disabled = true;
+                            progressControl.value = 0; // 重置進度條
+                            currentTimeDisplay.textContent = '0:00'; // 重置當前時間顯示
+                            durationDisplay.textContent = '0:00'; // 重置總時長顯示
+                            currentSongTitle.textContent = '無'; // 重置當前歌曲顯示
+
+                        }
+                    });
+
+
+
+                    // 更新進度條和顯示的時間
+                    audio.addEventListener('loadedmetadata', function () {
+                        // 更新總時長顯示
+                        durationDisplay.textContent = formatTime(audio.duration);
+                    });
+
+                    audio.addEventListener('timeupdate', function () {
+                        if (audio.duration && audio.src.endsWith(".mp3")) { // 確保有音頻可播放
+                            const progress = (audio.currentTime / audio.duration) * 100;
+                            progressControl.value = progress; // 更新滑動條的值
+                            currentTimeDisplay.textContent = formatTime(audio.currentTime); // 更新當前播放時間顯示
+                        }
+                    });
+
+                    // 允許用戶調整播放進度
+                    let isDragging = false; // 用於追蹤滑動條是否正在拖動
+
+                    progressControl.addEventListener('mousedown', () => {
+                        isDragging = true; // 開始拖動時設為 true
+                    });
+
+                    progressControl.addEventListener('mouseup', () => {
+                        isDragging = false; // 結束拖動時設為 false
+                        if (audio.duration) {
+                            const newTime = (progressControl.value / 100) * audio.duration;
+                            audio.currentTime = newTime; // 設置新的播放時間
+                        }
+                    });
+
+                    // 當滑動條變動時，設定音頻播放時間
+                    progressControl.addEventListener('input', function () {
+                        if (isDragging && audio.duration) {
+                            const newTime = (progressControl.value / 100) * audio.duration;
+                            currentTimeDisplay.textContent = formatTime(newTime); // 預覽時間
+                        }
+                    });
+
+                    function updateProgress() {
+                        if (!isDragging && audio.duration) {
+                            const progress = (audio.currentTime / audio.duration) * 100;
+                            progressControl.value = progress;
+                            currentTimeDisplay.textContent = formatTime(audio.currentTime);
+                        }
+                    }
+
+                    // 格式化時間顯示
+                    function formatTime(seconds) {
+                        const minutes = Math.floor(seconds / 60);
+                        const secs = Math.floor(seconds % 60);
+                        return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+                    }
+                    audio.addEventListener('loadedmetadata', function () {
+                        durationDisplay.textContent = formatTime(audio.duration);
+                    });
+
+
+
+                    playBtn.addEventListener('click', playSong);
+                    pauseBtn.addEventListener('click', pauseSong);
+                    stopBtn.addEventListener('click', stopSong);
+                    nextBtn.addEventListener('click', nextSong);
+                    prevBtn.addEventListener('click', prevSong);
+                    rewindBtn.addEventListener('click', rewindSong);
+                    fastForwardBtn.addEventListener('click', fastForwardSong);
+                    singlePlayBtn.addEventListener('click', playSingleSong);
+                    playlistPlayBtn.addEventListener('click', playPlaylist);
+                    randomPlayBtn.addEventListener('click', playRandomSong);
+
+
+                    function playSong() {
+                        if (audio.src) {
+                            audio.play().catch(error => {
+                                console.error("Error playing audio:", error);
+                            });
+                            updateAudioDuration()
+                        }
+                    }
+
+                    function pauseSong() {
+                        audio.pause();
+                        playBtn.disabled = false; // 禁用播放按鈕
+                    }
+
+
+                    function stopSong() {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        playBtn.disabled = false; // 禁用播放按鈕
+                    }
+                    function nextSong() {
+                        currentSongIndex = (currentSongIndex + 1) % songs.length; // 確保在範圍內
+                        console.log("Current song index (next):", currentSongIndex); // 調試用
+                        const nextSong = songs[currentSongIndex];
+                        songSelect.value = nextSong;
+                        songSelect.dispatchEvent(new Event('change'));
+                        updateCurrentSongDisplay(); // 更新顯示的歌曲名稱
+                    }
+
+                    function prevSong() {
+                        currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length; // 確保在範圍內
+                        console.log("Current song index (prev):", currentSongIndex); // 調試用
+                        const nextSong = songs[currentSongIndex];
+                        songSelect.value = nextSong;
+                        songSelect.dispatchEvent(new Event('change'));
+                        updateCurrentSongDisplay(); // 更新顯示的歌曲名稱
+                    }
+
+                    function rewindSong() {
+                        audio.currentTime = Math.max(0, audio.currentTime - 10);
+                    }
+
+                    function fastForwardSong() {
+                        audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+                    }
+
+                    function playSingleSong() {
+                        audio.loop = true; // 設置為循環當前歌曲
+                        audio.play();
+                    }
+
+                    function playPlaylist() {
+                        audio.loop = false; // 設置為播放列表
+                        audio.src = songs[currentSongIndex];
+                        playSong();
+                        audio.removeEventListener('ended', nextSong); // 移除之前的監聽器
+                        audio.addEventListener('ended', function () {
+                            nextSong(); // 當歌曲播放結束，播放下一首
+                            updateCurrentSongDisplay(); // 更新當前歌曲顯示
+                        });
+                    }
+
+
+                    function playRandomSong() {
+                        const randomIndex = Math.floor(Math.random() * songs.length); // 隨機獲取歌曲索引
+                        const selectedSong = songs[randomIndex]; // 獲取隨機選擇的歌曲
+                        audio.src = selectedSong; // 更新音頻來源
+                        audio.currentTime = 0; // 重置播放時間
+                        audio.play(); // 播放隨機歌曲
+                        songSelect.value = selectedSong;
+                        updateCurrentSongDisplay(); // 更新顯示歌曲名稱
+                        /*  playBtn.disabled = true; // 禁用播放按鈕 */
+                        pauseBtn.disabled = false; // 啟用暫停按鈕
+
+                    }
+                    // 當歌曲播放結束時自動播放另一首隨機歌曲
+                    audio.addEventListener('ended', playRandomSong);
+
+                    const volumeControl = document.getElementById('volume');
+
+                    // 設置音量
+                    volumeInput.addEventListener('input', function () {
+                        audio.volume = volumeInput.value; // 設置音量
+                        updateVolumeDisplay(); // 更新音量顯示
+                    });
+
+                    function updateVolumeDisplay() {
+                        const volumePercentage = Math.round(volumeInput.value * 100); // 將音量轉換為百分比並四捨五入
+                        volumeDisplay.textContent = volumePercentage; // 更新顯示的音量數字
+                    }
+
+                    function increaseVolume() {
+                        if (audio.volume < 1) {
+                            audio.volume = Math.min(1, audio.volume + 0.1);
+                            volumeInput.value = audio.volume; // 更新滑動條的值
+                            updateVolumeDisplay(); // 更新顯示的數字
+                        }
+                    }
+
+                    function decreaseVolume() {
+                        if (audio.volume > 0) {
+                            audio.volume = Math.max(0, audio.volume - 0.1);
+                            volumeInput.value = audio.volume; // 更新滑動條的值
+                            updateVolumeDisplay(); // 更新顯示的數字
+                        }
+                    }
+
+                    // 初始化顯示音量
+                    updateVolumeDisplay();
+                    audio.addEventListener('play', updateCurrentSongDisplay);
+                    // 添加 timeupdate 事件來更新進度條
+                    audio.addEventListener('timeupdate', updateProgress);
+
+
+
+
+                    // 打開管理歌單的模態視窗
+                    document.getElementById('system-btn').onclick = function () {
+                        modal.style.display = 'flex';
+                        renderSongList();
+                    };
+
+                    // 關閉模態視窗
+                    document.getElementById('close-modal-btn').onclick = function () {
+                        modal.style.display = 'none';
+                    };
+
+                    // 渲染歌曲列表
+                    function renderSongList() {
+                        songList.innerHTML = ''; // 清空列表
+                        songs.forEach((song, index) => {
+                            // 使用 song.name，如果沒有則顯示檔案名稱或替代文字
+                            const songDisplayName = song.name || song;
+                            const listItem = document.createElement('li');
+                            listItem.className = 'song-item';
+                            listItem.innerHTML = `
+                    ${songDisplayName}
+                    <button onclick="removeSong(${index})">刪除</button>
+                `;
+                            songList.appendChild(listItem);
+                        });
+                    }
+
+                    // 新增歌曲
+                    document.getElementById('add-song-btn').onclick = function () {
+                        document.getElementById('file-input').click();
+                    };
+
+                    document.getElementById('file-input').onchange = function (event) {
+                        const files = event.target.files; // 獲取選中的檔案
+                        for (let i = 0; i < files.length; i++) {
+                            songs.push(files[i]); // 將檔案加入歌曲數組
+                        }
+                        renderSongList(); // 更新歌曲列表
+                    };
+
+                    // 刪除歌曲
+                    function removeSong(index) {
+                        songs.splice(index, 1); // 從數組中刪除歌曲
+                        renderSongList(); // 更新歌曲列表
+                    }
+
+
+                </script>
 
 </body>
 
